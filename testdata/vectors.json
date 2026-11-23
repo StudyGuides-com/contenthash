@@ -1,0 +1,289 @@
+[
+	{
+		"name": "a public root",
+		"func": "Tag",
+		"args": [
+			"",
+			"Library"
+		],
+		"hash": "v2:425a2453100f80b8b899aeb558411adb2774ba51fd513b2d20c36b728356fb5c"
+	},
+	{
+		"name": "a public tag four deep",
+		"func": "Tag",
+		"args": [
+			"",
+			"Library",
+			"Science",
+			"Biology",
+			"Cells"
+		],
+		"hash": "v2:d4ce606d45317d9470180bfbc1056b63e2aabb4bb238cf7a83ec1c679c1d5ee9"
+	},
+	{
+		"name": "the same last two names under another parent",
+		"func": "Tag",
+		"args": [
+			"",
+			"Library",
+			"Health",
+			"Biology",
+			"Cells"
+		],
+		"hash": "v2:b9347e30e8cac5e321efa50e92892367b96005ca905186dda0e52b7b3700fd89"
+	},
+	{
+		"name": "a user's topic",
+		"func": "Tag",
+		"args": [
+			"user-1",
+			"Biology",
+			"Unit 1",
+			"Vocabulary"
+		],
+		"hash": "v2:21ce7d6473656a306974ff6a2b10e092b7efa6d249dd2399f74a909b7612e8b3"
+	},
+	{
+		"name": "the same names in another of the user's folders",
+		"func": "Tag",
+		"args": [
+			"user-1",
+			"Chemistry",
+			"Unit 1",
+			"Vocabulary"
+		],
+		"hash": "v2:536dffb3303599f376ce7fed20653ac08f3287b7476955caa82a1574e0769a15"
+	},
+	{
+		"name": "the same path, public",
+		"func": "Tag",
+		"args": [
+			"",
+			"Biology",
+			"Unit 1",
+			"Vocabulary"
+		],
+		"hash": "v2:e4a388d8b6092406ec1dbb74a62ca22fa030573f8c22d3c69883221edfc92416"
+	},
+	{
+		"name": "whitespace is trimmed and collapsed",
+		"func": "Tag",
+		"args": [
+			"",
+			"  Biology",
+			"Unit \t  1 ",
+			"Vocabulary\n"
+		],
+		"hash": "v2:e4a388d8b6092406ec1dbb74a62ca22fa030573f8c22d3c69883221edfc92416"
+	},
+	{
+		"name": "a no-break space counts as whitespace",
+		"func": "Tag",
+		"args": [
+			"",
+			"Biology",
+			"Unit 1",
+			"Vocabulary"
+		],
+		"hash": "v2:e4a388d8b6092406ec1dbb74a62ca22fa030573f8c22d3c69883221edfc92416"
+	},
+	{
+		"name": "case is kept",
+		"func": "Tag",
+		"args": [
+			"",
+			"biology",
+			"unit 1",
+			"vocabulary"
+		],
+		"hash": "v2:dc7bee1b1e25b3f3556bf39204de7ff9bf2c5981582d01f275aea9b6cfb002ff"
+	},
+	{
+		"name": "an accent typed as one character",
+		"func": "Tag",
+		"args": [
+			"",
+			"Café"
+		],
+		"hash": "v2:1c77cf3d1543497cb4932a28d0af338bd85d6f5bfe87d4fdae7bf56ffe33545d"
+	},
+	{
+		"name": "an accent typed as a combining mark (NFC makes it the same)",
+		"func": "Tag",
+		"args": [
+			"",
+			"Café"
+		],
+		"hash": "v2:1c77cf3d1543497cb4932a28d0af338bd85d6f5bfe87d4fdae7bf56ffe33545d"
+	},
+	{
+		"name": "names that run together differently: AB, C",
+		"func": "Tag",
+		"args": [
+			"",
+			"AB",
+			"C"
+		],
+		"hash": "v2:5f69e5baac14f7e9ee45ef880ec8c988d934ffa9804a73659d87c01db88ae5bb"
+	},
+	{
+		"name": "names that run together differently: A, BC",
+		"func": "Tag",
+		"args": [
+			"",
+			"A",
+			"BC"
+		],
+		"hash": "v2:4ded4a59eab1f0efb85788f62599c1a21d1354f33cae562f37de61ed8380f08d"
+	},
+	{
+		"name": "symbols and non-Latin text",
+		"func": "Tag",
+		"args": [
+			"",
+			"Brand® Courses",
+			"Course № 1",
+			"心理学 — 概要"
+		],
+		"hash": "v2:0bb377f43733beb9a2c7647d3a62865416b483dd4ebd3a91ed4ba285abc74fae"
+	},
+	{
+		"name": "a root whose name is empty after normalizing",
+		"func": "Tag",
+		"args": [
+			"",
+			"   "
+		],
+		"hash": "v2:7f8b2a26a7057057438dfadf6f7af4369b152a090bcd82074cfcdbba649a78c1"
+	},
+	{
+		"name": "no names",
+		"func": "Tag",
+		"args": [
+			""
+		],
+		"hash": ""
+	},
+	{
+		"name": "a child of the four-deep tag, from its parent's hash",
+		"func": "TagChild",
+		"args": [
+			"",
+			"v2:d4ce606d45317d9470180bfbc1056b63e2aabb4bb238cf7a83ec1c679c1d5ee9",
+			"Membranes"
+		],
+		"hash": "v2:ed13b2f92ee387a4c0c095f245a1083125b17cb2f6507efeddf092245ab4ebc3"
+	},
+	{
+		"name": "a public question",
+		"func": "Question",
+		"args": [
+			"",
+			"",
+			"What is a bowline?",
+			"A loop"
+		],
+		"hash": "v2:6057843a471f3cc3fecf409d2ef192da06e32160aa016dda932cdaa4b1e530ad"
+	},
+	{
+		"name": "the same question, whitespace differing",
+		"func": "Question",
+		"args": [
+			"",
+			"",
+			"What is  a bowline? ",
+			" A loop"
+		],
+		"hash": "v2:6057843a471f3cc3fecf409d2ef192da06e32160aa016dda932cdaa4b1e530ad"
+	},
+	{
+		"name": "a question whose prompt and answer run together differently",
+		"func": "Question",
+		"args": [
+			"",
+			"",
+			"What is a bowline?A",
+			" loop"
+		],
+		"hash": "v2:6bcf6de0e56604ac0a94ea7df099bd4ab1ea9038be6168bfb70f044315392892"
+	},
+	{
+		"name": "a user's question, scoped to their topic",
+		"func": "Question",
+		"args": [
+			"user-1",
+			"v2:21ce7d6473656a306974ff6a2b10e092b7efa6d249dd2399f74a909b7612e8b3",
+			"What is a bowline?",
+			"A loop"
+		],
+		"hash": "v2:285f05771caccf113b47342e004380b6f8bc9f6645cc779ad59be38ef7cb3d8a"
+	},
+	{
+		"name": "a passage",
+		"func": "Passage",
+		"args": [
+			"",
+			"v2:d4ce606d45317d9470180bfbc1056b63e2aabb4bb238cf7a83ec1c679c1d5ee9",
+			"On Cells"
+		],
+		"hash": "v2:ad6c21bb371950dc854b50483a91a48d5baa96c73404c8b46cd375dccd849040"
+	},
+	{
+		"name": "v1: a public tag",
+		"func": "V1Tag",
+		"args": [
+			"",
+			"Biology",
+			"Cells"
+		],
+		"hash": "3183fa483ff9c693818e43bc29c0a8fee998a78460824efb6df8dd400417c3b1"
+	},
+	{
+		"name": "v1: a public root",
+		"func": "V1Tag",
+		"args": [
+			"",
+			"",
+			"Library"
+		],
+		"hash": "dc20b3d5d2cddf82fad332821ca5e9a4efdcede4a273aa193d2b495bdcc92825"
+	},
+	{
+		"name": "v1: a user's tag",
+		"func": "V1Tag",
+		"args": [
+			"user-1",
+			"Unit 1",
+			"Vocabulary"
+		],
+		"hash": "e927f299de6e3c893f21c6acaa25d34c9e929b6042870a032e8f6a0c7b64ffdd"
+	},
+	{
+		"name": "v1: a public question",
+		"func": "V1Question",
+		"args": [
+			"What is a bowline?",
+			"A loop"
+		],
+		"hash": "f755109c6b2c7843d9ac86cb952dd09f199c8beb56f5e44cbc277d4182d6025f"
+	},
+	{
+		"name": "v1: a user's question",
+		"func": "V1UserQuestion",
+		"args": [
+			"user-1",
+			"cmtopicid0000000000000000",
+			"What is a bowline?",
+			"A loop"
+		],
+		"hash": "e0e1c824f317fb24d442aa2355cbbfbc8ecf6dd715804ec84bd325cad0e20753"
+	},
+	{
+		"name": "v1: a passage",
+		"func": "V1Passage",
+		"args": [
+			"On Cells"
+		],
+		"hash": "17962aebb14a0bd08b1e5d0e0b55b99d572fc336f12739a3def6a5387b283595"
+	}
+]
