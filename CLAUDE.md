@@ -30,8 +30,10 @@ note imported above. Read it before changing anything here.
 ## Commands
 
 ```bash
-python3 testdata/gen_vectors.py testdata/vectors.json
-go test ./...
-go vet ./...
-gofmt -l .
+make check                          # format, vet, vectors and tests; CI runs this
+make vectors                        # regenerate testdata/vectors.json
+make release-check VERSION=vX.Y.Z   # check a release could be made, changing nothing
 ```
+
+`make release VERSION=vX.Y.Z` tags `main` and publishes the version, which is
+permanent. Only the user runs it, or tells you to.
