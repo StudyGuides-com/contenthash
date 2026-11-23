@@ -171,7 +171,7 @@ func TestNormalizeIsIdempotent(t *testing.T) {
 
 // FuzzV2Normalize checks that normalizing twice changes nothing.
 func FuzzV2Normalize(f *testing.F) {
-	for _, s := range []string{"", "Science", "  Newton\u2019s  Laws ", "Stra\u00dfe", "\ufb01 x\u00b2 12\u2033", "\u200bA\u2013B\ufe0f", "\u13a0\uab70", "\u00b4\u0301", "\xff\xe2\x80"} {
+	for _, s := range []string{"", "Science", "  Newton\u2019s  Laws ", "Stra\u00dfe", "\ufb01 x\u00b2 12\u2033", "\u200bA\u2013B\ufe0f", "\u13a0\uab70", "\u00b4\u0301", "\xff\xe2\x80", "a" + strings.Repeat("\u0323\u0301", 40), "\U000e0067\u0301" + strings.Repeat("\u0344", 20)} {
 		f.Add(s)
 	}
 	f.Fuzz(func(t *testing.T, s string) {

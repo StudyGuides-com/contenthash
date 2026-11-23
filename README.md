@@ -32,6 +32,10 @@ other := contenthash.V2Tag("", []string{"Health", "Biology", "Cells"}) // != cel
 // Typing differences don't make a different tag.
 same := contenthash.V2Tag("", []string{"science", "BIOLOGY", " Cells "}) // == cells
 
+// The first argument is the owner: "" for shared, public content, or a
+// user's id for their own. Each owner's content is separate.
+mine := contenthash.V2Tag("user-123", []string{"Science", "Biology", "Cells"}) // != cells
+
 // A question that may appear under many tags.
 q := contenthash.V2Question("", "", "What is a cell?", "The basic unit of life")
 
@@ -188,7 +192,7 @@ NFKC is used rather than NFC because the hash is for identity, not display: `ﬁ
 
 Normalization is fixed to Unicode 15.0. Text with characters assigned after Unicode 15.0 is not guaranteed to hash the same in an implementation using later Unicode data.
 
-**Implementation note.** The Go code does canonical composition itself, from a table of Unicode 15.0 composition pairs (`compositions.go`), and uses `golang.org/x/text` for decomposition and case folding. x/text v0.32.0 looks composition pairs up by the low 16 bits of each character, so a character above U+FFFF before a combining mark can compose as if it were a BMP letter. Other implementations should use a correct NFKC; the vectors cover the cases.
+**Implementation note.** The Go code does canonical composition itself, from a table of Unicode 15.0 composition pairs (`compositions.go`), and uses `golang.org/x/text` for decomposition and case folding. x/text v0.32.0 gets two things wrong for this: it looks composition pairs up by the low 16 bits of each character, so a character above U+FFFF before a combining mark can compose as if it were a BMP letter; and normalizing a whole string inserts U+034F COMBINING GRAPHEME JOINER after 30 combining marks in a row (UAX #15's Stream-Safe Text Format), which plain NFKC doesn't. So the Go code decomposes one character at a time with x/text, then orders and composes itself. Other implementations should use a plain, correct NFKC; the vectors cover both cases.
 
 ### Version 1
 
