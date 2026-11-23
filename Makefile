@@ -1,4 +1,4 @@
-.PHONY: help build fmt fmt-check vet tidy test test-verbose test-coverage vectors vectors-check compositions compositions-check check release-check release
+.PHONY: help build fmt fmt-check vet tidy test test-verbose test-coverage vectors vectors-check compositions compositions-check differential check release-check release
 
 MODULE := github.com/studyguides-com/contenthash
 export VERSION
@@ -20,6 +20,7 @@ help:
 	@echo "  make test-coverage      - Run the tests with a coverage summary"
 	@echo "  make vet                - Run go vet"
 	@echo "  make check              - Everything a release needs: format, vet, vectors, tests"
+	@echo "  make differential       - Compare V2Normalize with the reference on ~1.5M inputs (about a minute)"
 	@echo ""
 	@echo "Vectors:"
 	@echo "  make vectors            - Regenerate $(VECTORS) from the spec's Python implementation"
@@ -72,6 +73,11 @@ compositions-check:
 	$(PYTHON) testdata/gen_compositions.py $$tmp >/dev/null || { echo "the compositions generator failed"; exit 1; }; \
 	gofmt $$tmp | cmp -s - compositions.go || { echo "compositions.go is out of date: run make compositions"; exit 1; }; \
 	echo "compositions.go matches its generator"
+
+# differential compares the Go normalizer with the reference implementation
+# on every code point and ~300k random strings; CI runs it as its own job.
+differential:
+	$(PYTHON) testdata/differential.py
 
 check: fmt-check vet vectors-check compositions-check test
 

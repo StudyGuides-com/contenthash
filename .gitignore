@@ -32,3 +32,6 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Python bytecode from the reference implementation
+__pycache__/
