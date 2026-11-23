@@ -1,0 +1,34 @@
+@../study-guides-wiki/_meta/agent-entrypoint.md
+@../study-guides-wiki/repos/contenthash.md
+
+# contenthash
+
+The content hash the Study Guides ecosystem identifies tags, questions and
+passages by, computed from text alone, so the pipeline and the web app get the
+same hash for the same content. Its design and its consumers live in the wiki
+note imported above. Read it before changing anything here.
+
+## Ground rules
+
+- **This repo is public; nothing but the hash goes in it.** No content, no
+  client or product names, no schema, no database or service code. A Go
+  module version, once fetched by the public proxy, is served forever, so
+  anything committed and tagged here is published permanently.
+- **Standard library only.** No dependencies.
+- **The golden vectors are the contract.** `testdata/vectors.json` maps
+  inputs to expected hashes. Consumers that keep their own check of the
+  vectors must get the updated file in the same change.
+- **Never change an existing hash.** Any change to the output (encoding,
+  normalization, fields) is a new hash version with its own prefix and new
+  vectors; the old version stays computable until every stored hash has been
+  rehashed.
+- **Tags are releases.** Tag `vX.Y.Z` on `main` only when the user says so;
+  consumers pin the version in their `go.mod`.
+
+## Commands
+
+```bash
+go test ./...
+go vet ./...
+gofmt -l .
+```
