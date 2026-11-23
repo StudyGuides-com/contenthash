@@ -2,18 +2,19 @@
 // hierarchy (tags, questions and passages) from its text alone, so two
 // systems that only share the text agree on what is the same content.
 //
-// A v2 hash is "v2:" followed by the hex SHA-256 of an encoded list of
-// fields: the kind of content first, then its fields in a fixed order. Each
-// field is encoded as its length in bytes (decimal), a colon, the bytes, and
-// a comma, so no two lists of fields encode the same way. Text fields are
-// normalized first (see Normalize); owner, scope and hash fields are used as
-// given.
+// Every function is named for the hash version it computes. V2 is current:
+// "v2:" followed by the hex SHA-256 of an encoded list of fields, the kind of
+// content first, text normalized by V2Normalize so typing differences (case,
+// quote and dash styles, invisible characters, whitespace) don't make new
+// content. A tag's hash chains through its parent's, so it depends on its
+// owner and every name on its path.
 //
-// A tag's hash chains through its parent's: the root's parent hash is
-// empty, so a tag's hash depends on its owner and every name on its path.
+// V1 functions compute the earlier, unprefixed hashes, so stored v1 hashes
+// can be checked and replaced. A hash version's output never changes.
 //
-// The V1 functions compute the earlier, unprefixed hashes, so stored v1
-// hashes can be checked and replaced.
+// Normalization is fixed to Unicode 15.0. Text containing characters
+// assigned after Unicode 15.0 is not guaranteed to hash the same under a
+// later version.
 package contenthash
 
 import (
@@ -21,12 +22,14 @@ import (
 	"encoding/hex"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
+	"golang.org/x/text/cases"
 	"golang.org/x/text/unicode/norm"
 )
 
-// Prefix starts every v2 hash.
-const Prefix = "v2:"
+// V2Prefix starts every v2 hash.
+const V2Prefix = "v2:"
 
 // Kinds of content, the first field of every v2 hash.
 const (
@@ -35,50 +38,111 @@ const (
 	kindPassage  = "passage"
 )
 
-// Normalize is the text a hash is computed from: Unicode NFC, with leading
-// and trailing whitespace removed and every run of whitespace inside made a
-// single space. Case is kept.
-func Normalize(s string) string {
-	return strings.Join(strings.Fields(norm.NFC.String(s)), " ")
+// V2Normalize is the text a v2 hash is computed from:
+//
+//  1. Each byte that isn't part of valid UTF-8 becomes U+FFFD.
+//  2. Format characters (Unicode 15.0 category Cf) are removed, except the
+//     zero-width non-joiner and joiner (U+200C, U+200D).
+//  3. NFKC, full case folding (Unicode CaseFolding.txt, statuses C and F),
+//     then NFKC again.
+//  4. Look-alike punctuation becomes ASCII: single quotes and primes become
+//     ', double quotes become ", and hyphens and dashes become -.
+//  5. Whitespace (Unicode White_Space and control characters) is trimmed from
+//     both ends, and each run inside becomes one space.
+func V2Normalize(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		i += size
+		if !isFormat(r) {
+			b.WriteRune(r)
+		}
+	}
+	s = norm.NFKC.String(cases.Fold().String(norm.NFKC.String(b.String())))
+
+	b.Reset()
+	space := false
+	for _, r := range s {
+		if isSpace(r) {
+			space = b.Len() > 0
+			continue
+		}
+		if space {
+			b.WriteByte(' ')
+			space = false
+		}
+		if a, ok := punctuation[r]; ok {
+			r = a
+		}
+		r = foldCherokee(r)
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
-// TagChild is the v2 hash of a tag named name under the tag whose hash is
-// parentHash; an empty parentHash makes it a root. owner is empty for public
-// content.
-func TagChild(owner, parentHash, name string) string {
-	return hash(kindTag, owner, parentHash, Normalize(name))
+// V2TagChild is the v2 hash of a tag named name under the tag whose v2 hash
+// is parentHash; an empty parentHash makes it a root. owner is empty for
+// public content.
+func V2TagChild(owner, parentHash, name string) string {
+	return hash(kindTag, owner, parentHash, V2Normalize(name))
 }
 
-// Tag is the v2 hash of the tag at the end of path, whose names run from the
-// root to the tag. owner is empty for public content. Tag with no names is
-// "".
-func Tag(owner string, path ...string) string {
+// V2Tag is the v2 hash of the tag at the end of path, whose names run from
+// the root to the tag. owner is empty for public content. It panics if path
+// is empty: a tag has at least a name.
+func V2Tag(owner string, path []string) string {
+	if len(path) == 0 {
+		panic("contenthash: V2Tag needs at least one name")
+	}
 	h := ""
 	for _, name := range path {
-		h = TagChild(owner, h, name)
+		h = V2TagChild(owner, h, name)
 	}
 	return h
 }
 
-// Question is the v2 hash of a question. scope is empty for a question that
-// may be shared across tags (public content); otherwise it is the hash of the
-// one tag the question belongs to.
-func Question(owner, scope, prompt, answer string) string {
-	return hash(kindQuestion, owner, scope, Normalize(prompt), Normalize(answer))
+// V2Question is the v2 hash of a question. scope is empty for a question that
+// may be shared across tags; otherwise it is the v2 hash of the one tag the
+// question belongs to.
+func V2Question(owner, scope, prompt, answer string) string {
+	return hash(kindQuestion, owner, scope, V2Normalize(prompt), V2Normalize(answer))
 }
 
-// Passage is the v2 hash of a passage titled title in the tag whose hash is
-// tagHash.
-func Passage(owner, tagHash, title string) string {
-	return hash(kindPassage, owner, tagHash, Normalize(title))
+// V2Passage is the v2 hash of a passage titled title in the tag whose v2 hash
+// is tagHash.
+func V2Passage(owner, tagHash, title string) string {
+	return hash(kindPassage, owner, tagHash, V2Normalize(title))
 }
 
-// IsV2 reports whether h is a v2 hash.
-func IsV2(h string) bool {
-	return strings.HasPrefix(h, Prefix) && len(h) == len(Prefix)+sha256.Size*2
+// Version is the version of a stored hash: 2 for "v2:" and 64 lowercase hex
+// digits, 1 for 64 lowercase hex digits alone, and 0 for anything else. A v1
+// hash can't be told from any other unprefixed SHA-256; Version only checks
+// its form.
+func Version(h string) int {
+	switch {
+	case strings.HasPrefix(h, V2Prefix) && isHash(h[len(V2Prefix):]):
+		return 2
+	case isHash(h):
+		return 1
+	}
+	return 0
 }
 
-// hash encodes the fields and returns the prefixed hex SHA-256.
+func isHash(s string) bool {
+	if len(s) != sha256.Size*2 {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if c := s[i]; (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+			return false
+		}
+	}
+	return true
+}
+
+// hash encodes the fields and returns the prefixed hex SHA-256. Each field is
+// its length in bytes, a colon, its bytes and a comma.
 func hash(fields ...string) string {
 	var b strings.Builder
 	for _, f := range fields {
@@ -88,7 +152,7 @@ func hash(fields ...string) string {
 		b.WriteByte(',')
 	}
 	sum := sha256.Sum256([]byte(b.String()))
-	return Prefix + hex.EncodeToString(sum[:])
+	return V2Prefix + hex.EncodeToString(sum[:])
 }
 
 // V1Tag is the v1 hash of a tag: SHA-256 of owner + parent name + name,
@@ -98,12 +162,12 @@ func V1Tag(owner, parentName, name string) string {
 	return v1(owner + parentName + name)
 }
 
-// V1Question is the v1 hash of a public question: prompt + answer.
+// V1Question is the v1 hash of a shared question: prompt + answer.
 func V1Question(prompt, answer string) string {
 	return v1(prompt + answer)
 }
 
-// V1UserQuestion is the v1 hash of a user's question: owner + the topic's id
+// V1UserQuestion is the v1 hash of an owned question: owner + the topic's id
 // + prompt + answer.
 func V1UserQuestion(owner, topicID, prompt, answer string) string {
 	return v1(owner + topicID + prompt + answer)

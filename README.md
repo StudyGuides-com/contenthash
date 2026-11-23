@@ -16,7 +16,7 @@ It hashes three kinds of content:
 go get github.com/studyguides-com/contenthash
 ```
 
-Requires Go 1.24 or later. The only dependency is `golang.org/x/text`, for Unicode normalization.
+Requires Go 1.24 or later. The only dependency is `golang.org/x/text`, for Unicode normalization and case folding.
 
 ## Quick start
 
@@ -24,19 +24,22 @@ Requires Go 1.24 or later. The only dependency is `golang.org/x/text`, for Unico
 import "github.com/studyguides-com/contenthash"
 
 // A tag, from its path of names, root first.
-cells := contenthash.Tag("", "Science", "Biology", "Cells")
+cells := contenthash.V2Tag("", []string{"Science", "Biology", "Cells"})
 
 // The same name under another parent is a different tag.
-other := contenthash.Tag("", "Health", "Biology", "Cells") // != cells
+other := contenthash.V2Tag("", []string{"Health", "Biology", "Cells"}) // != cells
+
+// Typing differences don't make a different tag.
+same := contenthash.V2Tag("", []string{"science", "BIOLOGY", " Cells "}) // == cells
 
 // A question that may appear under many tags.
-q := contenthash.Question("", "", "What is a cell?", "The basic unit of life")
+q := contenthash.V2Question("", "", "What is a cell?", "The basic unit of life")
 
 // A passage in the Cells tag.
-p := contenthash.Passage("", cells, "Inside a Cell")
+p := contenthash.V2Passage("", cells, "Inside a Cell")
 ```
 
-Every hash is a string like `v2:3f9a…` (the version, a colon, 64 hex characters).
+Every v2 hash is a string like `v2:3f9a…`: the version, a colon, and 64 lowercase hex digits.
 
 ## How it works
 
@@ -48,31 +51,33 @@ Every hash is a string like `v2:3f9a…` (the version, a colon, 64 hex character
 
 **Question scope.** A question with an empty scope is identified by its text alone, so the same question under two tags is the same question. Pass a tag's hash as the scope when a question belongs to that one tag and should stay separate from identical questions elsewhere.
 
-**Normalization.** Names, prompts, answers and titles are normalized before hashing, so invisible differences don't create new content:
+**Normalization.** The hash decides whether two pieces of text are the same content, so it ignores differences that come from how text was typed or generated rather than what it says. Store and display the original text; only the hash is computed from the normalized form. `V2Normalize` folds together:
 
-- Unicode NFC, so `é` typed as one character or as `e` plus a combining accent is the same.
-- Leading and trailing whitespace removed, and runs of whitespace (spaces, tabs, newlines, no-break spaces) collapsed to one space.
-- Case is kept: `Unit 1` and `unit 1` are different.
+- **Case:** `Genes With Introns` and `Genes with Introns`; `Straße` and `STRASSE`.
+- **Quote and dash styles:** `Newton’s` and `Newton's`, `“Blue”` and `"Blue"`, and en dashes, em dashes, minus signs and non-breaking hyphens with `-`. Primes become `'`.
+- **Invisible characters:** zero-width spaces, byte order marks, word joiners, soft hyphens and direction marks are removed.
+- **Whitespace:** leading and trailing whitespace is removed, and every run inside (spaces, tabs, newlines, no-break spaces, control characters) becomes one space.
+- **Compatibility forms:** `ﬁ` and `fi`, full-width `Ｓ` and `S`, `x²` and `x2`, and an accent typed as one character or as a letter plus a combining mark.
 
-`Normalize` is exported, so callers can store or compare names the same way.
+Names that differ in any other way hash differently.
 
 ## Examples
 
 ### Building a tree top-down
 
-When you already have the parent's hash, `TagChild` takes one step instead of rehashing the whole path:
+When you already have the parent's hash, `V2TagChild` takes one step instead of rehashing the whole path:
 
 ```go
-root := contenthash.TagChild("", "", "Science")
-biology := contenthash.TagChild("", root, "Biology")
-cells := contenthash.TagChild("", biology, "Cells")
-// cells == contenthash.Tag("", "Science", "Biology", "Cells")
+root := contenthash.V2TagChild("", "", "Science")
+biology := contenthash.V2TagChild("", root, "Biology")
+cells := contenthash.V2TagChild("", biology, "Cells")
+// cells == contenthash.V2Tag("", []string{"Science", "Biology", "Cells"})
 ```
 
 ### Finding existing content on import
 
 ```go
-h := contenthash.Tag("", path...)
+h := contenthash.V2Tag("", path)
 existing, found := store.TagByHash(h) // your lookup
 if !found {
 	store.CreateTag(h, path)
@@ -87,35 +92,40 @@ Renaming or moving a tag changes its path, so it changes the hash of the tag **a
 
 ```go
 func rehash(t *Node, parentHash string) {
-	t.Hash = contenthash.TagChild(t.Owner, parentHash, t.Name)
+	t.Hash = contenthash.V2TagChild(t.Owner, parentHash, t.Name)
 	for _, child := range t.Children {
 		rehash(child, t.Hash)
 	}
 }
 ```
 
-Questions scoped to a rehashed tag need their hash recomputed too; passages always do.
+Questions scoped to a rehashed tag need their hash recomputed too, and so do its passages.
 
 ### A user's own content
 
 ```go
 const owner = "user-123"
-mine := contenthash.Tag(owner, "Biology", "Unit 1", "Vocabulary")
-also := contenthash.Tag(owner, "Chemistry", "Unit 1", "Vocabulary") // different folder, different hash
-q := contenthash.Question(owner, mine, "What is osmosis?", "Diffusion of water across a membrane")
+mine := contenthash.V2Tag(owner, []string{"Biology", "Unit 1", "Vocabulary"})
+also := contenthash.V2Tag(owner, []string{"Chemistry", "Unit 1", "Vocabulary"}) // different folder, different hash
+q := contenthash.V2Question(owner, mine, "What is osmosis?", "Diffusion of water across a membrane")
 ```
 
 ### Moving from v1 hashes
 
-The `V1` functions compute the earlier, unprefixed hashes, so a migration can check what's stored and replace it:
+The `V1` functions compute the earlier, unprefixed hashes, so a migration can tell which stored hashes it knows how to replace:
 
 ```go
-if !contenthash.IsV2(stored) {
+switch contenthash.Version(stored) {
+case 2:
+	// already v2
+case 1:
 	if stored == contenthash.V1Tag(owner, parentName, name) {
-		// a known v1 hash: safe to replace with the v2 one
+		// a v1 hash of this tag's current name: replace it
+		stored = contenthash.V2Tag(owner, path)
+	} else {
+		// a v1-shaped hash this tag's name doesn't produce: hashed under an
+		// older name, or another rule; look into it before replacing
 	}
-	newHash := contenthash.Tag(owner, path...)
-	// ...
 }
 ```
 
@@ -125,18 +135,18 @@ During a migration both versions exist side by side; the `v2:` prefix tells them
 
 | Function | Returns |
 |---|---|
-| `Tag(owner string, path ...string) string` | The v2 hash of the tag at the end of `path` (root first). `""` when `path` is empty. |
-| `TagChild(owner, parentHash, name string) string` | The v2 hash of `name` under the tag with `parentHash`; an empty `parentHash` makes a root. |
-| `Question(owner, scope, prompt, answer string) string` | The v2 hash of a question; `scope` is `""` (shared) or a tag hash. |
-| `Passage(owner, tagHash, title string) string` | The v2 hash of a passage in the tag with `tagHash`. |
-| `Normalize(s string) string` | The text a hash is computed from. |
-| `IsV2(h string) bool` | Whether `h` is a well-formed v2 hash. |
+| `V2Tag(owner string, path []string) string` | The v2 hash of the tag at the end of `path` (root first). Panics if `path` is empty. |
+| `V2TagChild(owner, parentHash, name string) string` | The v2 hash of `name` under the tag with `parentHash`; an empty `parentHash` makes a root. |
+| `V2Question(owner, scope, prompt, answer string) string` | The v2 hash of a question; `scope` is `""` (shared) or a tag's v2 hash. |
+| `V2Passage(owner, tagHash, title string) string` | The v2 hash of a passage in the tag with `tagHash`. |
+| `V2Normalize(s string) string` | The text a v2 hash is computed from. |
+| `Version(h string) int` | `2` for a v2 hash, `1` for 64 lowercase hex digits, `0` otherwise. |
 | `V1Tag(owner, parentName, name string) string` | The v1 tag hash. |
 | `V1Question(prompt, answer string) string` | The v1 hash of a shared question. |
 | `V1UserQuestion(owner, topicID, prompt, answer string) string` | The v1 hash of an owned question. |
 | `V1Passage(title string) string` | The v1 passage hash. |
 
-`Prefix` is the `"v2:"` constant.
+`V2Prefix` is the `"v2:"` constant. Every function is named for the hash version it computes, so a later version adds functions alongside these rather than changing them.
 
 ## Specification
 
@@ -146,24 +156,33 @@ The exact rules, for implementing this in another language. `testdata/gen_vector
 
 A v2 hash is `v2:` followed by the lowercase hex SHA-256 of an encoded list of fields.
 
-**Encoding.** Each field is its length in bytes (decimal, UTF-8), a colon, its bytes, and a comma. The fields are concatenated in order. `["tag", "", "", "Library"]` encodes as `3:tag,0:,0:,7:Library,`.
-
-**Normalizing.** Text fields (names, prompts, answers, titles) are normalized first:
-
-1. Unicode NFC.
-2. Leading and trailing whitespace removed, and every run of whitespace inside replaced by one space. Whitespace is the Unicode `White_Space` property.
-3. Case is kept.
-
-Owner, scope and hash fields are used exactly as given.
+**Encoding.** Each field is its length in bytes (decimal, UTF-8), a colon, its bytes, and a comma. The fields are concatenated in order. `["tag", "", "", "library"]` encodes as `3:tag,0:,0:,7:library,`.
 
 **Fields.**
 
 | Function | Fields |
 |---|---|
-| `TagChild(owner, parentHash, name)` | `"tag"`, owner, parentHash, name |
-| `Tag(owner, path...)` | `TagChild` applied down the path from the root, starting with an empty parentHash |
-| `Question(owner, scope, prompt, answer)` | `"question"`, owner, scope, prompt, answer |
-| `Passage(owner, tagHash, title)` | `"passage"`, owner, tagHash, title |
+| `V2TagChild(owner, parentHash, name)` | `"tag"`, owner, parentHash, normalized name |
+| `V2Tag(owner, path)` | `V2TagChild` applied down the path from the root, starting with an empty parentHash |
+| `V2Question(owner, scope, prompt, answer)` | `"question"`, owner, scope, normalized prompt, normalized answer |
+| `V2Passage(owner, tagHash, title)` | `"passage"`, owner, tagHash, normalized title |
+
+Owner, scope, parentHash and tagHash are used exactly as given, with no normalization. A hash field is the whole `v2:…` string.
+
+**Normalizing.** Names, prompts, answers and titles are normalized in these steps, on Unicode 15.0:
+
+1. **Invalid UTF-8:** each byte that isn't part of a valid UTF-8 sequence becomes U+FFFD.
+2. **Format characters:** every character of general category Cf is removed, except U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER, which change how text renders.
+3. **Compatibility and case:** NFKC, then full case folding (`CaseFolding.txt`, statuses C and F), then NFKC again.
+4. **Punctuation:**
+   - U+2018, U+2019, U+201A, U+201B, U+2032 and U+2035 become `'`.
+   - U+201C, U+201D, U+201E and U+201F become `"`.
+   - U+2010 to U+2015, U+2212, U+2E3A and U+2E3B become `-`.
+5. **Whitespace:** whitespace is every character with the `White_Space` property and every control character (category Cc). It is removed from both ends, and each run inside becomes one U+0020.
+
+NFKC is used rather than NFC because the hash is for identity, not display: `ﬁ` and `fi` are the same name. The stored text keeps its original form.
+
+Normalization is fixed to Unicode 15.0. Text with characters assigned after Unicode 15.0 is not guaranteed to hash the same in an implementation using later Unicode data.
 
 ### Version 1
 
@@ -176,11 +195,15 @@ SHA-256 hex of the inputs run together, with no prefix, separator or normalizati
 | `V1UserQuestion(owner, topicID, prompt, answer)` | owner + topicID + prompt + answer |
 | `V1Passage(title)` | title |
 
-v1 has known weaknesses that v2 fixes: a tag depends only on its parent's name, so the same names under different parents collide; inputs run together, so `"AB" + "C"` equals `"A" + "BC"`; and nothing marks which formula made a hash.
+v1 has known weaknesses that v2 fixes:
+- A tag depends only on its parent's name, so the same names under different parents collide.
+- Inputs run together, so `"AB" + "C"` equals `"A" + "BC"`.
+- Any difference in case, punctuation or whitespace makes a new hash.
+- Nothing marks which formula made a hash.
 
 ## Stability
 
-- **A hash version never changes.** Any change to the output (encoding, normalization, fields) is a new version with a new prefix, and the old version's functions stay.
+- **A hash version never changes.** Any change to the output (encoding, normalization, fields, Unicode version) is a new version with a new prefix, and the old version's functions stay.
 - **Releases are tagged `vX.Y.Z`**, and a published version is permanent.
 - `testdata/vectors.json` is the contract: every release passes it, and other implementations can test against it.
 
@@ -194,7 +217,7 @@ make release-check VERSION=vX.Y.Z   # check a release could be made, changing no
 make release VERSION=vX.Y.Z         # tag main and publish the version
 ```
 
-`testdata/vectors.json` is generated by `testdata/gen_vectors.py`, an independent implementation of the specification, so the Go code is checked against the spec rather than against itself. To change a hash: change the specification here, the generator and the Go code together, run `make vectors`, and `make check` must pass.
+`testdata/vectors.json` is generated by `testdata/gen_vectors.py`, an independent implementation of the specification. It derives its character sets from Python's Unicode data and needs Python 3.12, whose Unicode data is 15.0. To change a hash: change the specification here, the generator and the Go code together, run `make vectors`, and `make check` must pass.
 
 ## License
 

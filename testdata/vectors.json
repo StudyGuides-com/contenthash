@@ -6,7 +6,7 @@
 			"",
 			"Library"
 		],
-		"hash": "v2:425a2453100f80b8b899aeb558411adb2774ba51fd513b2d20c36b728356fb5c"
+		"hash": "v2:f722eb089dae37075b49eecb500383ff3615b01c0b072aa33def542ca7050380"
 	},
 	{
 		"name": "a public tag four deep",
@@ -18,7 +18,7 @@
 			"Biology",
 			"Cells"
 		],
-		"hash": "v2:d4ce606d45317d9470180bfbc1056b63e2aabb4bb238cf7a83ec1c679c1d5ee9"
+		"hash": "v2:add5624bea765942fdeedf9f0196ff82a08ad3680b7fc153b7d83a10d10cce06"
 	},
 	{
 		"name": "the same last two names under another parent",
@@ -30,7 +30,7 @@
 			"Biology",
 			"Cells"
 		],
-		"hash": "v2:b9347e30e8cac5e321efa50e92892367b96005ca905186dda0e52b7b3700fd89"
+		"hash": "v2:2752acc2574e606476db6dd9e038e3854bd6f4e749cbf597247408e604ee2384"
 	},
 	{
 		"name": "a user's topic",
@@ -41,7 +41,7 @@
 			"Unit 1",
 			"Vocabulary"
 		],
-		"hash": "v2:21ce7d6473656a306974ff6a2b10e092b7efa6d249dd2399f74a909b7612e8b3"
+		"hash": "v2:959deb8dbf99957d696f1d3c93be51d94a7434d313b1648fcd7cdb14c7cbed7a"
 	},
 	{
 		"name": "the same names in another of the user's folders",
@@ -52,7 +52,7 @@
 			"Unit 1",
 			"Vocabulary"
 		],
-		"hash": "v2:536dffb3303599f376ce7fed20653ac08f3287b7476955caa82a1574e0769a15"
+		"hash": "v2:0283168cbc71bf95342befb51fce1e648266b34acdefa313065f2e4461a50b3a"
 	},
 	{
 		"name": "the same path, public",
@@ -63,58 +63,7 @@
 			"Unit 1",
 			"Vocabulary"
 		],
-		"hash": "v2:e4a388d8b6092406ec1dbb74a62ca22fa030573f8c22d3c69883221edfc92416"
-	},
-	{
-		"name": "whitespace is trimmed and collapsed",
-		"func": "Tag",
-		"args": [
-			"",
-			"  Biology",
-			"Unit \t  1 ",
-			"Vocabulary\n"
-		],
-		"hash": "v2:e4a388d8b6092406ec1dbb74a62ca22fa030573f8c22d3c69883221edfc92416"
-	},
-	{
-		"name": "a no-break space counts as whitespace",
-		"func": "Tag",
-		"args": [
-			"",
-			"Biology",
-			"Unit 1",
-			"Vocabulary"
-		],
-		"hash": "v2:e4a388d8b6092406ec1dbb74a62ca22fa030573f8c22d3c69883221edfc92416"
-	},
-	{
-		"name": "case is kept",
-		"func": "Tag",
-		"args": [
-			"",
-			"biology",
-			"unit 1",
-			"vocabulary"
-		],
 		"hash": "v2:dc7bee1b1e25b3f3556bf39204de7ff9bf2c5981582d01f275aea9b6cfb002ff"
-	},
-	{
-		"name": "an accent typed as one character",
-		"func": "Tag",
-		"args": [
-			"",
-			"Café"
-		],
-		"hash": "v2:1c77cf3d1543497cb4932a28d0af338bd85d6f5bfe87d4fdae7bf56ffe33545d"
-	},
-	{
-		"name": "an accent typed as a combining mark (NFC makes it the same)",
-		"func": "Tag",
-		"args": [
-			"",
-			"Café"
-		],
-		"hash": "v2:1c77cf3d1543497cb4932a28d0af338bd85d6f5bfe87d4fdae7bf56ffe33545d"
 	},
 	{
 		"name": "names that run together differently: AB, C",
@@ -124,7 +73,7 @@
 			"AB",
 			"C"
 		],
-		"hash": "v2:5f69e5baac14f7e9ee45ef880ec8c988d934ffa9804a73659d87c01db88ae5bb"
+		"hash": "v2:2675bff21cc35b8ce9d72af2703a65a4a8e855a12861d7547c88f105e9d0d4ed"
 	},
 	{
 		"name": "names that run together differently: A, BC",
@@ -134,18 +83,28 @@
 			"A",
 			"BC"
 		],
-		"hash": "v2:4ded4a59eab1f0efb85788f62599c1a21d1354f33cae562f37de61ed8380f08d"
+		"hash": "v2:3786b23c94f76b516836da7bd0ac5ac4530c8706e1fe27b5482d88476fb38413"
 	},
 	{
-		"name": "symbols and non-Latin text",
+		"name": "a name that looks like the encoding",
 		"func": "Tag",
 		"args": [
 			"",
-			"Brand® Courses",
-			"Course № 1",
-			"心理学 — 概要"
+			"3:tag,",
+			"0:,"
 		],
-		"hash": "v2:0bb377f43733beb9a2c7647d3a62865416b483dd4ebd3a91ed4ba285abc74fae"
+		"hash": "v2:67baa0c65fea9fac55874b034fe622eb6cca21fdfe45435b5a90dfd201c23248"
+	},
+	{
+		"name": "an empty name in the middle of a path",
+		"func": "Tag",
+		"args": [
+			"",
+			"Science",
+			"",
+			"Cells"
+		],
+		"hash": "v2:b6854ea7a21d0d936f0686d34780181c9d27e87f2cfe6855ecfb7d0104a5b04a"
 	},
 	{
 		"name": "a root whose name is empty after normalizing",
@@ -157,22 +116,399 @@
 		"hash": "v2:7f8b2a26a7057057438dfadf6f7af4369b152a090bcd82074cfcdbba649a78c1"
 	},
 	{
-		"name": "no names",
-		"func": "Tag",
-		"args": [
-			""
-		],
-		"hash": ""
-	},
-	{
 		"name": "a child of the four-deep tag, from its parent's hash",
 		"func": "TagChild",
 		"args": [
 			"",
-			"v2:d4ce606d45317d9470180bfbc1056b63e2aabb4bb238cf7a83ec1c679c1d5ee9",
+			"v2:add5624bea765942fdeedf9f0196ff82a08ad3680b7fc153b7d83a10d10cce06",
 			"Membranes"
 		],
-		"hash": "v2:ed13b2f92ee387a4c0c095f245a1083125b17cb2f6507efeddf092245ab4ebc3"
+		"hash": "v2:105755dd3c6c48fc93fc7997f8f59531a4aa63db602eb6fb8a25a0e494f6cc18"
+	},
+	{
+		"name": "whitespace is trimmed and collapsed",
+		"func": "Tag",
+		"args": [
+			"",
+			"  Biology",
+			"Unit \t  1 ",
+			"Vocabulary\n"
+		],
+		"hash": "v2:dc7bee1b1e25b3f3556bf39204de7ff9bf2c5981582d01f275aea9b6cfb002ff"
+	},
+	{
+		"name": "a newline inside a name is a space",
+		"func": "Tag",
+		"args": [
+			"",
+			"Biology",
+			"Unit\n1",
+			"Vocabulary"
+		],
+		"hash": "v2:dc7bee1b1e25b3f3556bf39204de7ff9bf2c5981582d01f275aea9b6cfb002ff"
+	},
+	{
+		"name": "other whitespace: no-break, ideographic, line separator, NEL, vertical tab, form feed, ogham, narrow no-break",
+		"func": "Tag",
+		"args": [
+			"",
+			"Biology\u00a0",
+			"Unit\u3000\u2028\u0085\u000b\f\u1680\u202f1",
+			"Vocabulary"
+		],
+		"hash": "v2:dc7bee1b1e25b3f3556bf39204de7ff9bf2c5981582d01f275aea9b6cfb002ff"
+	},
+	{
+		"name": "control characters are whitespace",
+		"func": "Tag",
+		"args": [
+			"",
+			"Biology\u0000",
+			"Unit\u001c1",
+			"\u007fVocabulary"
+		],
+		"hash": "v2:dc7bee1b1e25b3f3556bf39204de7ff9bf2c5981582d01f275aea9b6cfb002ff"
+	},
+	{
+		"name": "case is folded",
+		"func": "Tag",
+		"args": [
+			"",
+			"biology",
+			"UNIT 1",
+			"VoCaBuLaRy"
+		],
+		"hash": "v2:dc7bee1b1e25b3f3556bf39204de7ff9bf2c5981582d01f275aea9b6cfb002ff"
+	},
+	{
+		"name": "title case: With",
+		"func": "Tag",
+		"args": [
+			"",
+			"Genes With Introns"
+		],
+		"hash": "v2:ec649c0488ff70b75d42fadcdcca8240aaa1eb589607f45e6a51ffdd368fa27d"
+	},
+	{
+		"name": "title case: with",
+		"func": "Tag",
+		"args": [
+			"",
+			"Genes with Introns"
+		],
+		"hash": "v2:ec649c0488ff70b75d42fadcdcca8240aaa1eb589607f45e6a51ffdd368fa27d"
+	},
+	{
+		"name": "full case folding: sharp s",
+		"func": "Tag",
+		"args": [
+			"",
+			"Stra\u00dfe"
+		],
+		"hash": "v2:32e128e14517258823d961f7bb61dd0234727982cd544ad906f007b1d916dcee"
+	},
+	{
+		"name": "full case folding: SS",
+		"func": "Tag",
+		"args": [
+			"",
+			"STRASSE"
+		],
+		"hash": "v2:32e128e14517258823d961f7bb61dd0234727982cd544ad906f007b1d916dcee"
+	},
+	{
+		"name": "a curly apostrophe",
+		"func": "Tag",
+		"args": [
+			"",
+			"Newton\u2019s Laws"
+		],
+		"hash": "v2:694968ddaaafbce3f8ea5464846ab1aa7563190c5e12948eab629c80690604ad"
+	},
+	{
+		"name": "a straight apostrophe",
+		"func": "Tag",
+		"args": [
+			"",
+			"Newton's Laws"
+		],
+		"hash": "v2:694968ddaaafbce3f8ea5464846ab1aa7563190c5e12948eab629c80690604ad"
+	},
+	{
+		"name": "curly double quotes",
+		"func": "Tag",
+		"args": [
+			"",
+			"\u201cBlue\u201d Period"
+		],
+		"hash": "v2:706cb6b659e74e7c7cf7af698df3a47d3549ac18144c3e9aea3ecd91a4d9ecfc"
+	},
+	{
+		"name": "straight double quotes",
+		"func": "Tag",
+		"args": [
+			"",
+			"\"Blue\" Period"
+		],
+		"hash": "v2:706cb6b659e74e7c7cf7af698df3a47d3549ac18144c3e9aea3ecd91a4d9ecfc"
+	},
+	{
+		"name": "an en dash",
+		"func": "Tag",
+		"args": [
+			"",
+			"Unit\u2013Acquired"
+		],
+		"hash": "v2:50ff900ec12aeb539cf8a3113fe9b3d7651a522f937ea0ea9e5fe3d4d9139521"
+	},
+	{
+		"name": "a hyphen",
+		"func": "Tag",
+		"args": [
+			"",
+			"Unit-Acquired"
+		],
+		"hash": "v2:50ff900ec12aeb539cf8a3113fe9b3d7651a522f937ea0ea9e5fe3d4d9139521"
+	},
+	{
+		"name": "an em dash, a minus sign, a non-breaking hyphen",
+		"func": "Tag",
+		"args": [
+			"",
+			"Unit\u2014Acquired",
+			"Unit\u2212Acquired",
+			"Unit\u2011Acquired"
+		],
+		"hash": "v2:15635eb0f0ad55fa4f4f8bf35b640592acb345ccf6073f97448cec280801add8"
+	},
+	{
+		"name": "each of those as a hyphen",
+		"func": "Tag",
+		"args": [
+			"",
+			"Unit-Acquired",
+			"Unit-Acquired",
+			"Unit-Acquired"
+		],
+		"hash": "v2:15635eb0f0ad55fa4f4f8bf35b640592acb345ccf6073f97448cec280801add8"
+	},
+	{
+		"name": "primes",
+		"func": "Tag",
+		"args": [
+			"",
+			"2\u2032-Deoxy 5\u2032"
+		],
+		"hash": "v2:ca8f55dbf6be2c0e85b18cae06351812a1f62448e01cb6b2d9a600c3fe011493"
+	},
+	{
+		"name": "apostrophes for primes",
+		"func": "Tag",
+		"args": [
+			"",
+			"2'-Deoxy 5'"
+		],
+		"hash": "v2:ca8f55dbf6be2c0e85b18cae06351812a1f62448e01cb6b2d9a600c3fe011493"
+	},
+	{
+		"name": "leading zero width spaces",
+		"func": "Tag",
+		"args": [
+			"",
+			"\u200b\u200bToxic Metals"
+		],
+		"hash": "v2:cce57df8eeecf285316e3768112d8487030253fedc3a9e3747ddb170b0e96585"
+	},
+	{
+		"name": "no zero width spaces",
+		"func": "Tag",
+		"args": [
+			"",
+			"Toxic Metals"
+		],
+		"hash": "v2:cce57df8eeecf285316e3768112d8487030253fedc3a9e3747ddb170b0e96585"
+	},
+	{
+		"name": "a byte order mark, word joiner, soft hyphen and direction mark",
+		"func": "Tag",
+		"args": [
+			"",
+			"\ufeffSci\u00adence\u2060\u200e"
+		],
+		"hash": "v2:96e9aa1571b0b09b432b93731c1133f273559980f9bfb7f94ea0afac21982b5c"
+	},
+	{
+		"name": "none of them",
+		"func": "Tag",
+		"args": [
+			"",
+			"Science"
+		],
+		"hash": "v2:96e9aa1571b0b09b432b93731c1133f273559980f9bfb7f94ea0afac21982b5c"
+	},
+	{
+		"name": "every format character but the joiners",
+		"func": "Tag",
+		"args": [
+			"",
+			"\u00ad\u0600\u0601\u0602\u0603\u0604\u0605\u061c\u06dd\u070f\u0890\u0891\u08e2\u180e\u200b\u200e\u200f\u202a\u202b\u202c\u202d\u202e\u2060\u2061\u2062\u2063\u2064\u2066\u2067\u2068\u2069\u206a\u206b\u206c\u206d\u206e\u206f\ufeff\ufff9\ufffa\ufffb\ud804\udcbd\ud804\udccd\ud80d\udc30\ud80d\udc31\ud80d\udc32\ud80d\udc33\ud80d\udc34\ud80d\udc35\ud80d\udc36\ud80d\udc37\ud80d\udc38\ud80d\udc39\ud80d\udc3a\ud80d\udc3b\ud80d\udc3c\ud80d\udc3d\ud80d\udc3e\ud80d\udc3f\ud82f\udca0\ud82f\udca1\ud82f\udca2\ud82f\udca3\ud834\udd73\ud834\udd74\ud834\udd75\ud834\udd76\ud834\udd77\ud834\udd78\ud834\udd79\ud834\udd7a\udb40\udc01\udb40\udc20\udb40\udc21\udb40\udc22\udb40\udc23\udb40\udc24\udb40\udc25\udb40\udc26\udb40\udc27\udb40\udc28\udb40\udc29\udb40\udc2a\udb40\udc2bScience\udb40\udc2c\udb40\udc2d\udb40\udc2e\udb40\udc2f\udb40\udc30\udb40\udc31\udb40\udc32\udb40\udc33\udb40\udc34\udb40\udc35\udb40\udc36\udb40\udc37\udb40\udc38\udb40\udc39\udb40\udc3a\udb40\udc3b\udb40\udc3c\udb40\udc3d\udb40\udc3e\udb40\udc3f\udb40\udc40\udb40\udc41\udb40\udc42\udb40\udc43\udb40\udc44\udb40\udc45\udb40\udc46\udb40\udc47\udb40\udc48\udb40\udc49\udb40\udc4a\udb40\udc4b\udb40\udc4c\udb40\udc4d\udb40\udc4e\udb40\udc4f\udb40\udc50\udb40\udc51\udb40\udc52\udb40\udc53\udb40\udc54\udb40\udc55\udb40\udc56\udb40\udc57\udb40\udc58\udb40\udc59\udb40\udc5a\udb40\udc5b\udb40\udc5c\udb40\udc5d\udb40\udc5e\udb40\udc5f\udb40\udc60\udb40\udc61\udb40\udc62\udb40\udc63\udb40\udc64\udb40\udc65\udb40\udc66\udb40\udc67\udb40\udc68\udb40\udc69\udb40\udc6a\udb40\udc6b\udb40\udc6c\udb40\udc6d\udb40\udc6e\udb40\udc6f\udb40\udc70\udb40\udc71\udb40\udc72\udb40\udc73\udb40\udc74\udb40\udc75\udb40\udc76\udb40\udc77\udb40\udc78\udb40\udc79\udb40\udc7a\udb40\udc7b\udb40\udc7c\udb40\udc7d\udb40\udc7e\udb40\udc7f"
+		],
+		"hash": "v2:96e9aa1571b0b09b432b93731c1133f273559980f9bfb7f94ea0afac21982b5c"
+	},
+	{
+		"name": "a Mongolian vowel separator is removed, not whitespace",
+		"func": "Tag",
+		"args": [
+			"",
+			"Sci\u180eence"
+		],
+		"hash": "v2:96e9aa1571b0b09b432b93731c1133f273559980f9bfb7f94ea0afac21982b5c"
+	},
+	{
+		"name": "zero width joiner and non-joiner are kept",
+		"func": "Tag",
+		"args": [
+			"",
+			"Sci\u200dence\u200c"
+		],
+		"hash": "v2:65e1203f9f3fb9d1c6749a9366818ddb83777dc86049d72e376bff6f57fa2331"
+	},
+	{
+		"name": "full-width letters",
+		"func": "Tag",
+		"args": [
+			"",
+			"\uff33\uff43\uff49\uff45\uff4e\uff43\uff45"
+		],
+		"hash": "v2:96e9aa1571b0b09b432b93731c1133f273559980f9bfb7f94ea0afac21982b5c"
+	},
+	{
+		"name": "an accent typed as one character",
+		"func": "Tag",
+		"args": [
+			"",
+			"Caf\u00e9"
+		],
+		"hash": "v2:0c854f12cdaa7563ef32add56b3362a27683c529fa368731d1499240b05c2d48"
+	},
+	{
+		"name": "an accent typed as a combining mark",
+		"func": "Tag",
+		"args": [
+			"",
+			"Cafe\u0301"
+		],
+		"hash": "v2:0c854f12cdaa7563ef32add56b3362a27683c529fa368731d1499240b05c2d48"
+	},
+	{
+		"name": "combining marks in one order",
+		"func": "Tag",
+		"args": [
+			"",
+			"a\u0308\u0323"
+		],
+		"hash": "v2:0aa90c961ce74e225455a1a23fe8a6f3ce71a883899d4f5f0cf88408fc3b8e0b"
+	},
+	{
+		"name": "combining marks in the other order",
+		"func": "Tag",
+		"args": [
+			"",
+			"a\u0323\u0308"
+		],
+		"hash": "v2:0aa90c961ce74e225455a1a23fe8a6f3ce71a883899d4f5f0cf88408fc3b8e0b"
+	},
+	{
+		"name": "Hangul jamo",
+		"func": "Tag",
+		"args": [
+			"",
+			"\u1112\u1161\u11ab"
+		],
+		"hash": "v2:2ca54bd3d45cbbfe8f97fe9a5f3c93c3ccd0224a2232dd90ade583a0c2cf115c"
+	},
+	{
+		"name": "the Hangul syllable",
+		"func": "Tag",
+		"args": [
+			"",
+			"\ud55c"
+		],
+		"hash": "v2:2ca54bd3d45cbbfe8f97fe9a5f3c93c3ccd0224a2232dd90ade583a0c2cf115c"
+	},
+	{
+		"name": "a ligature",
+		"func": "Tag",
+		"args": [
+			"",
+			"\ufb01nance"
+		],
+		"hash": "v2:aef068d29c83f850b29180d334e846c0d5f73df39bc8b95724adc5c7364db4c5"
+	},
+	{
+		"name": "no ligature",
+		"func": "Tag",
+		"args": [
+			"",
+			"finance"
+		],
+		"hash": "v2:aef068d29c83f850b29180d334e846c0d5f73df39bc8b95724adc5c7364db4c5"
+	},
+	{
+		"name": "a superscript",
+		"func": "Tag",
+		"args": [
+			"",
+			"x\u00b2"
+		],
+		"hash": "v2:54453331ca62636e423bf36f3cfe1d5e8c070379daac524be92356e946e45e7d"
+	},
+	{
+		"name": "no superscript",
+		"func": "Tag",
+		"args": [
+			"",
+			"x2"
+		],
+		"hash": "v2:54453331ca62636e423bf36f3cfe1d5e8c070379daac524be92356e946e45e7d"
+	},
+	{
+		"name": "Cherokee folds to uppercase, as CaseFolding.txt says",
+		"func": "Tag",
+		"args": [
+			"",
+			"\u13a0\u13f5 \uab70\u13fd"
+		],
+		"hash": "v2:abc1e68c7b6f4de6f7b53dcad4853dd262124c58f74a3ca8c1f923364155c4c4"
+	},
+	{
+		"name": "the same Cherokee, other cases",
+		"func": "Tag",
+		"args": [
+			"",
+			"\uab70\u13f5 \u13a0\u13f5"
+		],
+		"hash": "v2:abc1e68c7b6f4de6f7b53dcad4853dd262124c58f74a3ca8c1f923364155c4c4"
+	},
+	{
+		"name": "symbols and non-Latin text",
+		"func": "Tag",
+		"args": [
+			"",
+			"Brand\u00ae Courses",
+			"Course \u2116 1",
+			"\u5fc3\u7406\u5b66 \u2014 \u6982\u8981"
+		],
+		"hash": "v2:beece7a45eb35feefdeb255210c9ff5fb22e326919ac9f9bbe12b67228e4b07a"
+	},
+	{
+		"name": "an emoji with a variation selector",
+		"func": "Tag",
+		"args": [
+			"",
+			"Stars \u2b50\ufe0f"
+		],
+		"hash": "v2:8049f77cd5a8867c18953cd8d40b65626087a18b57781a7541e1c72f6637a3c0"
 	},
 	{
 		"name": "a public question",
@@ -183,18 +519,18 @@
 			"What is a bowline?",
 			"A loop"
 		],
-		"hash": "v2:6057843a471f3cc3fecf409d2ef192da06e32160aa016dda932cdaa4b1e530ad"
+		"hash": "v2:a0cd1e8ae8e322d0834de1a261bd277cdd38c8f4db4b162e2965ef3587c53f99"
 	},
 	{
-		"name": "the same question, whitespace differing",
+		"name": "the same question, typed differently",
 		"func": "Question",
 		"args": [
 			"",
 			"",
-			"What is  a bowline? ",
-			" A loop"
+			"  what is a BOWLINE?",
+			"a\u00a0loop "
 		],
-		"hash": "v2:6057843a471f3cc3fecf409d2ef192da06e32160aa016dda932cdaa4b1e530ad"
+		"hash": "v2:a0cd1e8ae8e322d0834de1a261bd277cdd38c8f4db4b162e2965ef3587c53f99"
 	},
 	{
 		"name": "a question whose prompt and answer run together differently",
@@ -205,28 +541,89 @@
 			"What is a bowline?A",
 			" loop"
 		],
-		"hash": "v2:6bcf6de0e56604ac0a94ea7df099bd4ab1ea9038be6168bfb70f044315392892"
+		"hash": "v2:c7f4c5dbf1550d88d9775a664151f446f3a3d1081089e72068b05276a4ea5454"
+	},
+	{
+		"name": "an empty prompt",
+		"func": "Question",
+		"args": [
+			"",
+			"",
+			"",
+			"A loop"
+		],
+		"hash": "v2:8e473d971881653f5df6c41c0b61bf40125ae0a3ce9ecd0217cfc90019d13933"
+	},
+	{
+		"name": "an owner, no scope",
+		"func": "Question",
+		"args": [
+			"user-1",
+			"",
+			"What is a bowline?",
+			"A loop"
+		],
+		"hash": "v2:474d847098aa4a40fdcca56d7089c133039f1538e642980322de4cb8f4f94184"
 	},
 	{
 		"name": "a user's question, scoped to their topic",
 		"func": "Question",
 		"args": [
 			"user-1",
-			"v2:21ce7d6473656a306974ff6a2b10e092b7efa6d249dd2399f74a909b7612e8b3",
+			"v2:959deb8dbf99957d696f1d3c93be51d94a7434d313b1648fcd7cdb14c7cbed7a",
 			"What is a bowline?",
 			"A loop"
 		],
-		"hash": "v2:285f05771caccf113b47342e004380b6f8bc9f6645cc779ad59be38ef7cb3d8a"
+		"hash": "v2:9162ffc8e7207aa1ae6938024300fcef3733e8dab42b6ba548e4190fee5e9661"
 	},
 	{
 		"name": "a passage",
 		"func": "Passage",
 		"args": [
 			"",
-			"v2:d4ce606d45317d9470180bfbc1056b63e2aabb4bb238cf7a83ec1c679c1d5ee9",
+			"v2:add5624bea765942fdeedf9f0196ff82a08ad3680b7fc153b7d83a10d10cce06",
 			"On Cells"
 		],
-		"hash": "v2:ad6c21bb371950dc854b50483a91a48d5baa96c73404c8b46cd375dccd849040"
+		"hash": "v2:c5c36637dc78d817c530d7da9c2aecdc6583be71fada8d9888a028c1e5220bc9"
+	},
+	{
+		"name": "a passage with an owner",
+		"func": "Passage",
+		"args": [
+			"user-1",
+			"v2:1760b7661a04334fa8472cade1043f805d9788b898bf52ebdeaaafc61f730797",
+			"On Cells"
+		],
+		"hash": "v2:50691ae6ab99711f066f74eb0830c9cd7c7af47a1d2d804448e0fd95905b362a"
+	},
+	{
+		"name": "an owner is not case folded",
+		"func": "Tag",
+		"args": [
+			"USER-1",
+			"Biology",
+			"Unit 1",
+			"Vocabulary"
+		],
+		"hash": "v2:6e8d54310004b21c843cfe14282aa24ef172669b93fda9a64d1f2a76fcd63518"
+	},
+	{
+		"name": "an owner is not normalized",
+		"func": "Tag",
+		"args": [
+			"cafe\u0301",
+			"Science"
+		],
+		"hash": "v2:2578cf86409c44cc11669b7ec1dc9117472c7fdbf9afc389700d6fd09345ffe4"
+	},
+	{
+		"name": "the same owner, precomposed",
+		"func": "Tag",
+		"args": [
+			"caf\u00e9",
+			"Science"
+		],
+		"hash": "v2:20930121211a81d355495eeb251e8c64929662137b4a33513f66f45fe24e77d5"
 	},
 	{
 		"name": "v1: a public tag",
@@ -257,6 +654,16 @@
 			"Vocabulary"
 		],
 		"hash": "e927f299de6e3c893f21c6acaa25d34c9e929b6042870a032e8f6a0c7b64ffdd"
+	},
+	{
+		"name": "v1: no normalization",
+		"func": "V1Tag",
+		"args": [
+			"",
+			"Biology",
+			"cells "
+		],
+		"hash": "c0dcd3c3d24503abb5fec242be491577a883a83c6b207cf4b9656740f7b88027"
 	},
 	{
 		"name": "v1: a public question",

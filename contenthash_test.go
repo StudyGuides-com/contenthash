@@ -3,7 +3,12 @@ package contenthash
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"testing"
+	"unicode"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/unicode/norm"
 )
 
 type vector struct {
@@ -28,10 +33,10 @@ func TestVectors(t *testing.T) {
 		t.Fatal("no vectors")
 	}
 	funcs := map[string]func(a []string) string{
-		"Tag":            func(a []string) string { return Tag(a[0], a[1:]...) },
-		"TagChild":       func(a []string) string { return TagChild(a[0], a[1], a[2]) },
-		"Question":       func(a []string) string { return Question(a[0], a[1], a[2], a[3]) },
-		"Passage":        func(a []string) string { return Passage(a[0], a[1], a[2]) },
+		"Tag":            func(a []string) string { return V2Tag(a[0], a[1:]) },
+		"TagChild":       func(a []string) string { return V2TagChild(a[0], a[1], a[2]) },
+		"Question":       func(a []string) string { return V2Question(a[0], a[1], a[2], a[3]) },
+		"Passage":        func(a []string) string { return V2Passage(a[0], a[1], a[2]) },
 		"V1Tag":          func(a []string) string { return V1Tag(a[0], a[1], a[2]) },
 		"V1Question":     func(a []string) string { return V1Question(a[0], a[1]) },
 		"V1UserQuestion": func(a []string) string { return V1UserQuestion(a[0], a[1], a[2], a[3]) },
@@ -50,54 +55,97 @@ func TestVectors(t *testing.T) {
 	}
 }
 
-func TestSameAndDifferent(t *testing.T) {
-	const owner = "owner1"
-	same := []struct {
-		name string
-		a, b string
-	}{
-		{"whitespace", Tag("", "Biology", "Unit 1"), Tag("", " Biology ", "Unit\t\t1")},
-		{"NFC", Tag("", "Café"), Tag("", "Café")},
-		{"Tag is TagChild down the path", Tag("", "A", "B", "C"), TagChild("", TagChild("", TagChild("", "", "A"), "B"), "C")},
-		{"question whitespace", Question("", "", "What is it?", "This"), Question("", "", " What  is it? ", "This ")},
+// TestUnicodeVersion fails when a dependency bump changes the Unicode data
+// normalization uses, so that change is made deliberately: it changes v2
+// hashes of characters assigned after Unicode 15.0.
+func TestUnicodeVersion(t *testing.T) {
+	if norm.Version != "15.0.0" {
+		t.Errorf("x/text/unicode/norm is Unicode %s; v2 is defined on 15.0.0", norm.Version)
 	}
-	for _, c := range same {
-		if c.a != c.b {
-			t.Errorf("%s: %s != %s", c.name, c.a, c.b)
+	if cases.UnicodeVersion != "15.0.0" {
+		t.Errorf("x/text/cases is Unicode %s; v2 is defined on 15.0.0", cases.UnicodeVersion)
+	}
+}
+
+// TestFormatTable checks the written-out format characters against Go's
+// Unicode tables, when Go's are also Unicode 15.0.
+func TestFormatTable(t *testing.T) {
+	if unicode.Version != "15.0.0" {
+		t.Skipf("Go's unicode tables are %s, not 15.0.0", unicode.Version)
+	}
+	for r := rune(0); r <= unicode.MaxRune; r++ {
+		want := unicode.Is(unicode.Cf, r) && r != 0x200C && r != 0x200D
+		if isFormat(r) != want {
+			t.Errorf("isFormat(%U) = %v", r, !want)
 		}
-	}
-	different := []struct {
-		name string
-		a, b string
-	}{
-		{"same names under different parents", Tag("", "Biology", "Unit 1", "Vocabulary"), Tag("", "Chemistry", "Unit 1", "Vocabulary")},
-		{"owner", Tag("", "Biology"), Tag(owner, "Biology")},
-		{"case", Tag("", "Unit 1"), Tag("", "unit 1")},
-		{"names run together differently", Tag("", "AB", "C"), Tag("", "A", "BC")},
-		{"a tag and a passage with the same text", TagChild("", "", "X"), Passage("", "", "X")},
-		{"question scope", Question(owner, "", "Q", "A"), Question(owner, Tag(owner, "T"), "Q", "A")},
-		{"prompt and answer run together differently", Question("", "", "QA", "B"), Question("", "", "Q", "AB")},
-	}
-	for _, c := range different {
-		if c.a == c.b {
-			t.Errorf("%s: both %s", c.name, c.a)
+		if isSpace(r) != (unicode.IsSpace(r) || unicode.Is(unicode.Cc, r)) {
+			t.Errorf("isSpace(%U) = %v", r, isSpace(r))
 		}
 	}
 }
 
-func TestIsV2(t *testing.T) {
-	if !IsV2(Tag("", "Library")) {
-		t.Error("a v2 tag hash")
+// Invalid UTF-8 can't be a JSON vector, so it's checked here: each invalid
+// byte becomes U+FFFD before normalizing.
+func TestInvalidUTF8(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"a\xffb", "a\ufffdb"},
+		{"a\xff\xfeb", "a\ufffd\ufffdb"},
+		{"caf\xc3", "caf\ufffd"},
+		{"\xe2\x80", "\ufffd\ufffd"},
 	}
-	for _, h := range []string{V1Tag("", "", "Library"), "", "v2:", "v2:abc", Prefix + V1Tag("", "", "Library") + "0"} {
-		if IsV2(h) {
-			t.Errorf("IsV2(%q)", h)
+	for _, tt := range tests {
+		if got := V2Normalize(tt.in); got != tt.want {
+			t.Errorf("V2Normalize(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+	if V2Tag("", []string{"\xff"}) != V2Tag("", []string{"\ufffd"}) {
+		t.Error("an invalid byte hashes as U+FFFD")
+	}
+}
+
+func TestV2TagPanicsWithNoNames(t *testing.T) {
+	for _, path := range [][]string{nil, {}} {
+		func() {
+			defer func() {
+				if recover() == nil {
+					t.Errorf("V2Tag(%q) didn't panic", path)
+				}
+			}()
+			V2Tag("owner", path)
+		}()
+	}
+}
+
+func TestVersion(t *testing.T) {
+	v2 := V2Tag("", []string{"Library"})
+	v1 := V1Tag("", "", "Library")
+	tests := []struct {
+		h    string
+		want int
+	}{
+		{v2, 2},
+		{v1, 1},
+		{"", 0},
+		{"v2:", 0},
+		{"v2:abc", 0},
+		{V2Prefix + v1 + "0", 0},
+		{V2Prefix + strings.Repeat("z", 64), 0},
+		{V2Prefix + strings.ToUpper(v1), 0},
+		{strings.ToUpper(v1), 0},
+		{"v3:" + v1, 0},
+	}
+	for _, tt := range tests {
+		if got := Version(tt.h); got != tt.want {
+			t.Errorf("Version(%q) = %d, want %d", tt.h, got, tt.want)
 		}
 	}
 }
 
-func TestNoNames(t *testing.T) {
-	if got := Tag("owner"); got != "" {
-		t.Errorf("Tag with no names = %q", got)
+func TestNormalizeIsIdempotent(t *testing.T) {
+	for _, s := range []string{"  Newton\u2019s  Laws ", "Stra\u00dfe", "\ufb01nance x\u00b2", "\u200bA\u2013B", "Cafe\u0301", "\u0130stanbul", "\u01c5"} {
+		once := V2Normalize(s)
+		if twice := V2Normalize(once); twice != once {
+			t.Errorf("V2Normalize(%q) = %q, but normalizing that gives %q", s, once, twice)
+		}
 	}
 }
