@@ -3,36 +3,35 @@ package contenthash
 // The character sets V2Normalize uses, written out so they are fixed to
 // Unicode 15.0 and don't change with the Go version.
 
-// formatRanges are the Unicode 15.0 format characters (category Cf) that
-// V2Normalize removes: every one except U+200C ZERO WIDTH NON-JOINER and
-// U+200D ZERO WIDTH JOINER, which change how text renders.
-var formatRanges = [][2]rune{
+// ignoredRanges are the Unicode 15.0 default ignorable code points
+// (Default_Ignorable_Code_Point) that V2Normalize removes: every one except
+// U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER, which change how
+// text renders, and the tag characters U+E0020-E007F, which make subdivision
+// flags such as England's.
+var ignoredRanges = [][2]rune{
 	{0x00AD, 0x00AD}, // soft hyphen
-	{0x0600, 0x0605},
-	{0x061C, 0x061C},
-	{0x06DD, 0x06DD},
-	{0x070F, 0x070F},
-	{0x0890, 0x0891},
-	{0x08E2, 0x08E2},
-	{0x180E, 0x180E},
+	{0x034F, 0x034F}, // combining grapheme joiner
+	{0x061C, 0x061C}, // Arabic letter mark
+	{0x115F, 0x1160}, // Hangul fillers
+	{0x17B4, 0x17B5},
+	{0x180B, 0x180F}, // Mongolian variation selectors and vowel separator
 	{0x200B, 0x200B}, // zero width space
 	{0x200E, 0x200F}, // direction marks
 	{0x202A, 0x202E}, // direction embeddings and overrides
-	{0x2060, 0x2064}, // word joiner, invisible operators
-	{0x2066, 0x206F}, // direction isolates, deprecated format characters
+	{0x2060, 0x206F}, // word joiner, invisible operators, direction isolates
+	{0x3164, 0x3164}, // Hangul filler
+	{0xFE00, 0xFE0F}, // variation selectors
 	{0xFEFF, 0xFEFF}, // byte order mark
-	{0xFFF9, 0xFFFB},
-	{0x110BD, 0x110BD},
-	{0x110CD, 0x110CD},
-	{0x13430, 0x1343F},
+	{0xFFA0, 0xFFA0}, // halfwidth Hangul filler
+	{0xFFF0, 0xFFF8},
 	{0x1BCA0, 0x1BCA3},
 	{0x1D173, 0x1D17A},
-	{0xE0001, 0xE0001},
-	{0xE0020, 0xE007F}, // tag characters
+	{0xE0000, 0xE001F},
+	{0xE0080, 0xE0FFF}, // variation selectors supplement, unassigned
 }
 
-func isFormat(r rune) bool {
-	for _, rg := range formatRanges {
+func isIgnored(r rune) bool {
+	for _, rg := range ignoredRanges {
 		if r < rg[0] {
 			return false
 		}
@@ -41,6 +40,12 @@ func isFormat(r rune) bool {
 		}
 	}
 	return false
+}
+
+// doublePrimes become " before NFKC, which would make each two primes
+var doublePrimes = map[rune]rune{
+	0x2033: '"', // double prime
+	0x2036: '"', // reversed double prime
 }
 
 // isSpace reports whether r is whitespace for V2Normalize: the Unicode
@@ -76,6 +81,7 @@ var punctuation = map[rune]rune{
 	0x201B: '\'', // single high-reversed-9 quotation mark
 	0x2032: '\'', // prime
 	0x2035: '\'', // reversed prime
+	0x02BC: '\'', // modifier letter apostrophe
 	0x201C: '"',  // left double quotation mark
 	0x201D: '"',  // right double quotation mark
 	0x201E: '"',  // double low-9 quotation mark

@@ -54,12 +54,12 @@ Every v2 hash is a string like `v2:3f9a…`: the version, a colon, and 64 lowerc
 **Normalization.** The hash decides whether two pieces of text are the same content, so it ignores differences that come from how text was typed or generated rather than what it says. Store and display the original text; only the hash is computed from the normalized form. `V2Normalize` folds together:
 
 - **Case:** `Genes With Introns` and `Genes with Introns`; `Straße` and `STRASSE`.
-- **Quote and dash styles:** `Newton’s` and `Newton's`, `“Blue”` and `"Blue"`, and en dashes, em dashes, minus signs and non-breaking hyphens with `-`. Primes become `'`.
-- **Invisible characters:** zero-width spaces, byte order marks, word joiners, soft hyphens and direction marks are removed.
+- **Quote and dash styles:** `Newton’s`, `Newtonʼs` and `Newton's`; `“Blue”` and `"Blue"`; `12″` and `12"`; and en dashes, em dashes, minus signs and non-breaking hyphens with `-`. Primes become `'`.
+- **Invisible characters:** zero-width spaces, byte order marks, word joiners, soft hyphens, direction marks and variation selectors are removed, so `⭐️` and `⭐` are the same. The zero-width joiner and non-joiner are kept inside a name, since they change how it renders, and so are the tag characters that make flags such as England's.
 - **Whitespace:** leading and trailing whitespace is removed, and every run inside (spaces, tabs, newlines, no-break spaces, control characters) becomes one space.
-- **Compatibility forms:** `ﬁ` and `fi`, full-width `Ｓ` and `S`, `x²` and `x2`, and an accent typed as one character or as a letter plus a combining mark.
+- **Compatibility forms:** `ﬁ` and `fi`, full-width `Ｓ` and `S`, and an accent typed as one character or as a letter plus a combining mark. This also merges forms that can differ in meaning: `x²` and `x2`, `10³` and `103`, `CO₂` and `CO2`. That is intended for names; for questions, both the prompt and the answer would have to merge for two questions to collide.
 
-Names that differ in any other way hash differently.
+The exact rules are in the specification below.
 
 ## Examples
 
@@ -84,7 +84,9 @@ if !found {
 }
 ```
 
-Store the hash in a column with a unique index, and the database enforces one row per path.
+Store the hash in a column with a unique index, and the database enforces one row per normalized path.
+
+`V2Tag` panics on an empty path, since a tag has at least a name. Check paths that come from data before calling it.
 
 ### Renaming or moving a tag
 
@@ -131,6 +133,8 @@ case 1:
 
 During a migration both versions exist side by side; the `v2:` prefix tells them apart.
 
+**Rows that are separate today can share a v2 hash.** v2 folds case, punctuation and invisible characters, so rows such as `Ohm's Law` and `Ohm’s Law` under one parent get one hash, and writing both fails on a unique index. Compute every row's v2 hash first, group the rows by it, and merge each group before writing.
+
 ## API
 
 | Function | Returns |
@@ -171,18 +175,20 @@ Owner, scope, parentHash and tagHash are used exactly as given, with no normaliz
 
 **Normalizing.** Names, prompts, answers and titles are normalized in these steps, on Unicode 15.0:
 
-1. **Invalid UTF-8:** each byte that isn't part of a valid UTF-8 sequence becomes U+FFFD.
-2. **Format characters:** every character of general category Cf is removed, except U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER, which change how text renders.
+1. **Invalid UTF-8:** decode left to right. Where no complete, valid sequence starts (shortest form, not a surrogate, at most U+10FFFF), that one byte becomes U+FFFD and decoding resumes at the next byte. This gives one U+FFFD per byte: `E2 80` becomes two, where most decoders, which replace a maximal subpart, give one.
+2. **Ignorable characters:** every `Default_Ignorable_Code_Point` is removed, except U+200C ZERO WIDTH NON-JOINER, U+200D ZERO WIDTH JOINER and the tag characters U+E0020 to U+E007F. U+2033 DOUBLE PRIME and U+2036 REVERSED DOUBLE PRIME become `"`.
 3. **Compatibility and case:** NFKC, then full case folding (`CaseFolding.txt`, statuses C and F), then NFKC again.
 4. **Punctuation:**
-   - U+2018, U+2019, U+201A, U+201B, U+2032 and U+2035 become `'`.
+   - U+2018, U+2019, U+201A, U+201B, U+2032, U+2035 and U+02BC become `'`.
    - U+201C, U+201D, U+201E and U+201F become `"`.
    - U+2010 to U+2015, U+2212, U+2E3A and U+2E3B become `-`.
-5. **Whitespace:** whitespace is every character with the `White_Space` property and every control character (category Cc). It is removed from both ends, and each run inside becomes one U+0020.
+5. **Whitespace:** whitespace is every character with the `White_Space` property and every control character (category Cc). It is removed from both ends, and each run inside becomes one U+0020. Then U+0020, U+200C and U+200D are removed from both ends.
 
 NFKC is used rather than NFC because the hash is for identity, not display: `ﬁ` and `fi` are the same name. The stored text keeps its original form.
 
 Normalization is fixed to Unicode 15.0. Text with characters assigned after Unicode 15.0 is not guaranteed to hash the same in an implementation using later Unicode data.
+
+**Implementation note.** The Go code does canonical composition itself, from a table of Unicode 15.0 composition pairs (`compositions.go`), and uses `golang.org/x/text` for decomposition and case folding. x/text v0.32.0 looks composition pairs up by the low 16 bits of each character, so a character above U+FFFF before a combining mark can compose as if it were a BMP letter. Other implementations should use a correct NFKC; the vectors cover the cases.
 
 ### Version 1
 
@@ -213,11 +219,12 @@ v1 has known weaknesses that v2 fixes:
 make help                           # list the targets
 make check                          # format, vet, vectors and tests (what CI runs)
 make vectors                        # regenerate testdata/vectors.json
+make compositions                   # regenerate compositions.go
 make release-check VERSION=vX.Y.Z   # check a release could be made, changing nothing
 make release VERSION=vX.Y.Z         # tag main and publish the version
 ```
 
-`testdata/vectors.json` is generated by `testdata/gen_vectors.py`, an independent implementation of the specification. It derives its character sets from Python's Unicode data and needs Python 3.12, whose Unicode data is 15.0. To change a hash: change the specification here, the generator and the Go code together, run `make vectors`, and `make check` must pass.
+`testdata/vectors.json` is generated by `testdata/gen_vectors.py`, an independent implementation of the specification. It derives its character sets from Python's Unicode data and needs Python 3.12, whose Unicode data is 15.0. `testdata/gen_compositions.py` generates the composition table the same way. To change a hash: change the specification here, the generator and the Go code together, run `make vectors`, and `make check` must pass.
 
 ## License
 

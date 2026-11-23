@@ -67,16 +67,27 @@ func TestUnicodeVersion(t *testing.T) {
 	}
 }
 
-// TestFormatTable checks the written-out format characters against Go's
+// defaultIgnorable is Default_Ignorable_Code_Point as DerivedCoreProperties
+// derives it: Other_Default_Ignorable_Code_Point + Cf + Variation_Selector -
+// White_Space - FFF9..FFFB - 13430..1343F - Prepended_Concatenation_Mark.
+func defaultIgnorable(r rune) bool {
+	if !unicode.In(r, unicode.Other_Default_Ignorable_Code_Point, unicode.Cf, unicode.Variation_Selector) {
+		return false
+	}
+	return !unicode.In(r, unicode.White_Space, unicode.Prepended_Concatenation_Mark) &&
+		!(r >= 0xFFF9 && r <= 0xFFFB) && !(r >= 0x13430 && r <= 0x1343F)
+}
+
+// TestCharacterTables checks the written-out character sets against Go's
 // Unicode tables, when Go's are also Unicode 15.0.
-func TestFormatTable(t *testing.T) {
+func TestCharacterTables(t *testing.T) {
 	if unicode.Version != "15.0.0" {
 		t.Skipf("Go's unicode tables are %s, not 15.0.0", unicode.Version)
 	}
 	for r := rune(0); r <= unicode.MaxRune; r++ {
-		want := unicode.Is(unicode.Cf, r) && r != 0x200C && r != 0x200D
-		if isFormat(r) != want {
-			t.Errorf("isFormat(%U) = %v", r, !want)
+		want := defaultIgnorable(r) && r != 0x200C && r != 0x200D && !(r >= 0xE0020 && r <= 0xE007F)
+		if isIgnored(r) != want {
+			t.Errorf("isIgnored(%U) = %v", r, !want)
 		}
 		if isSpace(r) != (unicode.IsSpace(r) || unicode.Is(unicode.Cc, r)) {
 			t.Errorf("isSpace(%U) = %v", r, isSpace(r))
@@ -84,14 +95,22 @@ func TestFormatTable(t *testing.T) {
 	}
 }
 
-// Invalid UTF-8 can't be a JSON vector, so it's checked here: each invalid
-// byte becomes U+FFFD before normalizing.
+// Invalid UTF-8 can't be a JSON vector, so it's checked here: decoding left
+// to right, a byte that doesn't start a valid sequence becomes U+FFFD and
+// decoding resumes at the next byte. Most decoders replace a maximal subpart
+// with one U+FFFD instead ("\xe2\x80" gives one); this rule gives one per
+// byte.
 func TestInvalidUTF8(t *testing.T) {
 	tests := []struct{ in, want string }{
 		{"a\xffb", "a\ufffdb"},
 		{"a\xff\xfeb", "a\ufffd\ufffdb"},
 		{"caf\xc3", "caf\ufffd"},
-		{"\xe2\x80", "\ufffd\ufffd"},
+		{"\xe2\x80", "\ufffd\ufffd"},                     // a truncated sequence
+		{"\xed\xa0\x80", "\ufffd\ufffd\ufffd"},           // a surrogate
+		{"\xc0\x80", "\ufffd\ufffd"},                     // an overlong encoding
+		{"\xf4\x90\x80\x80", "\ufffd\ufffd\ufffd\ufffd"}, // above U+10FFFF
+		{"\xe2\x80\x99s", "'s"},                          // a valid right quote is unaffected
+		{"x\xe2\x80\x99\xe2\x80", "x'\ufffd\ufffd"},      // a valid sequence, then a truncated one
 	}
 	for _, tt := range tests {
 		if got := V2Normalize(tt.in); got != tt.want {
@@ -142,10 +161,23 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNormalizeIsIdempotent(t *testing.T) {
-	for _, s := range []string{"  Newton\u2019s  Laws ", "Stra\u00dfe", "\ufb01nance x\u00b2", "\u200bA\u2013B", "Cafe\u0301", "\u0130stanbul", "\u01c5"} {
+	for _, s := range []string{"  Newton\u2019s  Laws ", "Stra\u00dfe", "\ufb01nance x\u00b2", "\u200bA\u2013B", "Cafe\u0301", "\u0130stanbul", "\u01c5", "12\u2033", "\u200d a \u200c", "\u00b4x"} {
 		once := V2Normalize(s)
 		if twice := V2Normalize(once); twice != once {
 			t.Errorf("V2Normalize(%q) = %q, but normalizing that gives %q", s, once, twice)
 		}
 	}
+}
+
+// FuzzV2Normalize checks that normalizing twice changes nothing.
+func FuzzV2Normalize(f *testing.F) {
+	for _, s := range []string{"", "Science", "  Newton\u2019s  Laws ", "Stra\u00dfe", "\ufb01 x\u00b2 12\u2033", "\u200bA\u2013B\ufe0f", "\u13a0\uab70", "\u00b4\u0301", "\xff\xe2\x80"} {
+		f.Add(s)
+	}
+	f.Fuzz(func(t *testing.T, s string) {
+		once := V2Normalize(s)
+		if twice := V2Normalize(once); twice != once {
+			t.Errorf("V2Normalize(%q) = %q, but normalizing that gives %q", s, once, twice)
+		}
+	})
 }

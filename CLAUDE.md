@@ -34,6 +34,7 @@ note imported above. Read it before changing anything here.
 ```bash
 make check                          # format, vet, vectors and tests; CI runs this
 make vectors                        # regenerate testdata/vectors.json (Python 3.12)
+make compositions                   # regenerate compositions.go (Python 3.12)
 make release-check VERSION=vX.Y.Z   # check a release could be made, changing nothing
 ```
 

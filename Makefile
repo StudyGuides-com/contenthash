@@ -1,6 +1,7 @@
-.PHONY: help build fmt fmt-check vet tidy test test-verbose test-coverage vectors vectors-check check release-check release
+.PHONY: help build fmt fmt-check vet tidy test test-verbose test-coverage vectors vectors-check compositions compositions-check check release-check release
 
 MODULE := github.com/studyguides-com/contenthash
+export VERSION
 VECTORS := testdata/vectors.json
 # The vectors are defined on Unicode 15.0, which is Python 3.12's
 PYTHON := python3.12 -I
@@ -23,6 +24,8 @@ help:
 	@echo "Vectors:"
 	@echo "  make vectors            - Regenerate $(VECTORS) from the spec's Python implementation"
 	@echo "  make vectors-check      - Fail if $(VECTORS) differs from what the generator writes"
+	@echo "  make compositions       - Regenerate compositions.go from Unicode 15.0 data"
+	@echo "  make compositions-check - Fail if compositions.go differs from what its generator writes"
 	@echo ""
 	@echo "Release (a published version is permanent):"
 	@echo "  make release-check VERSION=vX.Y.Z - Check a release could be made, changing nothing"
@@ -61,11 +64,20 @@ vectors-check:
 	cmp -s $$tmp $(VECTORS) || { echo "$(VECTORS) is out of date: run make vectors"; exit 1; }; \
 	echo "$(VECTORS) matches the generator"
 
-check: fmt-check vet vectors-check test
+compositions:
+	$(PYTHON) testdata/gen_compositions.py compositions.go && gofmt -w compositions.go
+
+compositions-check:
+	@tmp=$$(mktemp); trap 'rm -f $$tmp' EXIT; \
+	$(PYTHON) testdata/gen_compositions.py $$tmp >/dev/null || { echo "the compositions generator failed"; exit 1; }; \
+	gofmt $$tmp | cmp -s - compositions.go || { echo "compositions.go is out of date: run make compositions"; exit 1; }; \
+	echo "compositions.go matches its generator"
+
+check: fmt-check vet vectors-check compositions-check test
 
 # release-check runs every check a release does, without tagging anything.
 release-check: check
-	@echo '$(VERSION)' | grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$$' || { echo "VERSION must be vX.Y.Z, e.g. make release VERSION=v0.1.0"; exit 1; }
+	@printf '%s\n' "$$VERSION" | grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$$' || { echo "VERSION must be vX.Y.Z, e.g. make release VERSION=v0.1.0"; exit 1; }
 	@[ "$$(git branch --show-current)" = main ] || { echo "releases are tagged on main; this is $$(git branch --show-current)"; exit 1; }
 	@[ -z "$$(git status --porcelain)" ] || { echo "the working tree has uncommitted changes"; exit 1; }
 	@git fetch -q origin main && [ "$$(git rev-parse HEAD)" = "$$(git rev-parse origin/main)" ] || { echo "main isn't the same as origin/main; pull or push first"; exit 1; }

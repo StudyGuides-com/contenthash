@@ -25,7 +25,6 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/text/cases"
-	"golang.org/x/text/unicode/norm"
 )
 
 // V2Prefix starts every v2 hash.
@@ -40,26 +39,34 @@ const (
 
 // V2Normalize is the text a v2 hash is computed from:
 //
-//  1. Each byte that isn't part of valid UTF-8 becomes U+FFFD.
-//  2. Format characters (Unicode 15.0 category Cf) are removed, except the
-//     zero-width non-joiner and joiner (U+200C, U+200D).
+//  1. Decoding left to right, a byte that doesn't start a valid UTF-8
+//     sequence becomes U+FFFD, and decoding resumes at the next byte.
+//  2. Default ignorable code points are removed, except the zero-width
+//     non-joiner and joiner (U+200C, U+200D) and the tag characters
+//     (U+E0020-E007F). Double primes become ".
 //  3. NFKC, full case folding (Unicode CaseFolding.txt, statuses C and F),
 //     then NFKC again.
-//  4. Look-alike punctuation becomes ASCII: single quotes and primes become
-//     ', double quotes become ", and hyphens and dashes become -.
+//  4. Look-alike punctuation becomes ASCII: single quotes, primes and the
+//     modifier letter apostrophe become ', double quotes become ", and
+//     hyphens and dashes become -.
 //  5. Whitespace (Unicode White_Space and control characters) is trimmed from
-//     both ends, and each run inside becomes one space.
+//     both ends, and each run inside becomes one space. Joiners left at
+//     either end are trimmed too.
 func V2Normalize(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))
 	for i := 0; i < len(s); {
 		r, size := utf8.DecodeRuneInString(s[i:])
 		i += size
-		if !isFormat(r) {
-			b.WriteRune(r)
+		if isIgnored(r) {
+			continue
 		}
+		if q, ok := doublePrimes[r]; ok {
+			r = q
+		}
+		b.WriteRune(r)
 	}
-	s = norm.NFKC.String(cases.Fold().String(norm.NFKC.String(b.String())))
+	s = nfkc(cases.Fold().String(nfkc(b.String())))
 
 	b.Reset()
 	space := false
@@ -78,7 +85,7 @@ func V2Normalize(s string) string {
 		r = foldCherokee(r)
 		b.WriteRune(r)
 	}
-	return b.String()
+	return strings.Trim(b.String(), " \u200c\u200d")
 }
 
 // V2TagChild is the v2 hash of a tag named name under the tag whose v2 hash
