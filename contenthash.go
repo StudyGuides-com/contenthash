@@ -53,6 +53,14 @@ const (
 //     both ends, and each run inside becomes one space. Joiners left at
 //     either end are trimmed too.
 func V2Normalize(s string) string {
+	if out, ok := normalizeASCII(s); ok {
+		return out
+	}
+	return normalize(s)
+}
+
+// normalize is V2Normalize's steps in full, for any text.
+func normalize(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))
 	for i := 0; i < len(s); {
@@ -86,6 +94,36 @@ func V2Normalize(s string) string {
 		b.WriteRune(r)
 	}
 	return strings.Trim(b.String(), " \u200c\u200d")
+}
+
+// normalizeASCII is V2Normalize for text that is all ASCII, which most names
+// are; ok is false otherwise. For ASCII the steps reduce to this: no ASCII
+// character is ignorable, decomposes or maps to other punctuation, and case
+// folding is A-Z to a-z. Whitespace is the controls, the space and DEL.
+func normalizeASCII(s string) (out string, ok bool) {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			return "", false
+		}
+	}
+	b := make([]byte, 0, len(s))
+	space := false
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c <= ' ' || c == 0x7F {
+			space = len(b) > 0
+			continue
+		}
+		if space {
+			b = append(b, ' ')
+			space = false
+		}
+		if 'A' <= c && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		b = append(b, c)
+	}
+	return string(b), true
 }
 
 // V2TagChild is the v2 hash of a tag named name under the tag whose v2 hash

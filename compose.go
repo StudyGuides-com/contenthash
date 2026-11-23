@@ -24,11 +24,17 @@ import (
 func nfkc(s string) string {
 	runes := make([]rune, 0, len(s))
 	for _, r := range s {
+		if r < utf8.RuneSelf {
+			runes = append(runes, r) // ASCII doesn't decompose
+			continue
+		}
 		runes = append(runes, []rune(norm.NFKD.String(string(r)))...)
 	}
 	classes := make([]uint8, len(runes))
 	for i, r := range runes {
-		classes[i] = combiningClass(r)
+		if r >= utf8.RuneSelf {
+			classes[i] = combiningClass(r) // ASCII is all class 0
+		}
 	}
 	reorder(runes, classes)
 	return compose(runes, classes)

@@ -2,6 +2,7 @@ package contenthash
 
 import (
 	"encoding/json"
+	"math/rand"
 	"os"
 	"strings"
 	"testing"
@@ -180,4 +181,37 @@ func FuzzV2Normalize(f *testing.F) {
 			t.Errorf("V2Normalize(%q) = %q, but normalizing that gives %q", s, once, twice)
 		}
 	})
+}
+
+// The ASCII shortcut must give exactly what the full steps give.
+func TestNormalizeASCIIShortcut(t *testing.T) {
+	check := func(s string) {
+		t.Helper()
+		fast, ok := normalizeASCII(s)
+		if !ok {
+			t.Fatalf("normalizeASCII(%q) declined ASCII", s)
+		}
+		if slow := normalize(s); fast != slow {
+			t.Errorf("normalizeASCII(%q) = %q, normalize = %q", s, fast, slow)
+		}
+	}
+	for c := 0; c < 0x80; c++ {
+		check(string(rune(c)))
+		check("a" + string(rune(c)) + "B")
+		check(" " + string(rune(c)) + string(rune(c)) + " ")
+	}
+	rng := rand.New(rand.NewSource(1))
+	for i := 0; i < 100000; i++ {
+		b := make([]byte, rng.Intn(40))
+		for j := range b {
+			b[j] = byte(rng.Intn(0x80))
+		}
+		check(string(b))
+	}
+	if _, ok := normalizeASCII("caf\u00e9"); ok {
+		t.Error("normalizeASCII took non-ASCII text")
+	}
+	if _, ok := normalizeASCII("a\xffb"); ok {
+		t.Error("normalizeASCII took invalid UTF-8")
+	}
 }
